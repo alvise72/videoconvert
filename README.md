@@ -6,7 +6,12 @@ Particularity of this wrapper is that it is independent on any external library;
 It is a wrapper around the `ffmpeg` tool that rescale and change bitrate of a video file mapping a clean and easy command line interface to the `ffmpeg`'s complex one.
 
 The current capabilities of the tool at the moment are limited to rescale and change bitrate of a video, and remove audio track.
-
+# Installation
+Ensure you have `python` and `git` installed on your system, then
+```
+git clone
+cp videconvert/video-convert /usr/local/bin
+```
 # Usage
 ## Command line options
 ```
