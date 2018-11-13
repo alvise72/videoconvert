@@ -65,7 +65,11 @@ if __name__ == "__main__":
                       dest='ffprobe',
                       default='/usr/local/bin/ffprobe',
                       help='Alternative path of ffprobe binary')
-    
+    parser.add_option('-o',
+                      '--output-file',
+                      type='string',
+                      dest='outfile',
+                      help='Alternative path for output file')
     (options, args) = parser.parse_args()
     if len(args) == 0:
         print "Must specify mandatory argument <filename>. Stop!\n"
@@ -144,7 +148,7 @@ if __name__ == "__main__":
     if options.scale:
         a = re.match(r'^([0-9]+)%$', scale)
         if a:
-            realscale = float(int(a.group(1))/100)
+            realscale = float(a.group(1))/100
         else:
             realscale = float(scale)
 
@@ -172,6 +176,8 @@ if __name__ == "__main__":
         ra ='-an'
 
     outfile = "%s-converted.mp4" % (filename)
+    if options.outfile:
+        outfile = options.outfile
     if os.path.exists(outfile) == True:
         if overwrite:
             os.unlink(outfile)
@@ -185,8 +191,8 @@ if __name__ == "__main__":
 
     rs = ''
     if options.scale:
-        rs = "scale=%d:%d" % (W, H)
-    ffmpegcmd = "%s %s -i %s -vf %s -c:v libx264 %s  %s-converted.mp4 >/dev/null 2>&1" % (ffmpeg, ra, filename, rs, rb, filename)
+        rs = "-vf scale=%d:%d" % (W, H)
+    ffmpegcmd = "%s %s -i %s %s -c:v libx264 %s %s >/dev/null 2>&1" % (ffmpeg, ra, filename, rs, rb, outfile)
                           
     millisb = int(round(time.time() * 1000))
     res = getCommandOutput( ffmpegcmd, verbose )
