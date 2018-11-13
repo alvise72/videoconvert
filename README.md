@@ -8,7 +8,7 @@ It is a wrapper around the `ffmpeg` tool that rescale and change bitrate of a vi
 The current capabilities of the tool at the moment are limited to rescale and change bitrate of a video, and remove audio track.
 
 # Usage
-## Command options
+## Command line options
 ```
 $ video-convert -h
 Usage: video-convert [OPTIONS] <filename> [OPTIONS]
