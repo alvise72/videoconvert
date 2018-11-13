@@ -167,8 +167,8 @@ if __name__ == "__main__":
         print "Specified up-sampling (bitrate is greater than the original one). Stop."
         sys.exit(1)
 
-    if realbitrate == 0:
-        print "Specified zero bitrate or not specified at all. Resetting it to the original value %d." % (R)
+    if realbitrate == 0 and options.bitrate:
+        print "Specified zero bitrate. Resetting it to the original value %d." % (R)
         realbitrate = R
         
     ra = ''
