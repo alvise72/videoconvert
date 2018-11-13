@@ -1,0 +1,196 @@
+#!/usr/bin/python
+
+import re
+import sys
+import time
+import os.path
+import optparse
+import subprocess
+
+def getCommandOutput( cmd, verbose ):
+    if verbose:
+        print "Going to execute command [%s]" % (cmd)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+    result = []
+    for line in p.stdout.readlines():
+        result.append(line.rstrip())
+  
+    return result
+
+if __name__ == "__main__":
+    parser = optparse.OptionParser("Usage: video-convert [OPTIONS] <filename> [OPTIONS]")
+    parser.add_option('-b',
+                      '--bitrate',
+                      type='string',
+                      dest='bitrate',
+                      help="Set the new bitrate (can be an pure number or a number followed by 'k', 'K', 'm', 'M') or a percentage")
+    parser.add_option('-s',
+                      '--scale',
+                      type='string',
+                      dest='scale',
+                      help="Specifies the scale ratio for the resolution; can be a floating number greater than 0 and less or equal to 1, or an integer between 1 and 100 followed by '%'")
+    parser.add_option('-a',
+                      '--remove-audio',
+                      action="store_true",
+                      dest='removeaudio',
+                      default=False,
+                      help='Remove autio track')
+    parser.add_option('-v',
+                      '--verbose',
+                      action="store_true",
+                      dest='verbose',
+                      default=False,
+                      help='Prints out useful debug information')
+    parser.add_option('-i',
+                      '--info',
+                      action="store_true",
+                      dest='info',
+                      default=False,
+                      help='Prints out size and bitrate of the video')
+    parser.add_option('-O',
+                      '--overwrite',
+                      action="store_true",
+                      dest='overwrite',
+                      default=False,
+                      help='Overwrite output file if already exists')
+    parser.add_option('-P',
+                      '--ffmpeg-path',
+                      type='string',
+                      dest='ffmpeg',
+                      default='/usr/local/bin/ffmpeg',
+                      help='Alternative path of ffmpeg binary')
+    parser.add_option('-p',
+                      '--ffprobe-path',
+                      type='string',
+                      dest='ffprobe',
+                      default='/usr/local/bin/ffprobe',
+                      help='Alternative path of ffprobe binary')
+    
+    (options, args) = parser.parse_args()
+    if len(args) == 0:
+        print "Must specify mandatory argument <filename>. Stop!\n"
+        sys.exit(1)
+
+    filename = args[0]
+
+    bitrate     = str(options.bitrate)
+    percent     = 0.5
+    realbitrate = 0;
+    scale       = str(options.scale)
+    realscale   = 1.0
+    verbose     = options.verbose
+    infomode    = options.info
+    overwrite   = options.overwrite
+    removeaudio = options.removeaudio
+    ffmpeg      = options.ffmpeg
+    ffprobe     = options.ffprobe
+  
+    if os.path.exists(ffmpeg) == False or os.access(ffprobe, os.X_OK) == False:
+        print "\nCannot find %s or it is not executable. Stop." % (ffmpeg)
+        sys.exit(1)
+
+    if os.path.exists(ffprobe) == False or os.access(ffprobe, os.X_OK) == False:
+        print "\nCannot find %s or it is not executable. Stop." % (ffprobe)
+        sys.exit(1)
+
+    if os.path.isfile(filename) == False or os.access(filename, os.R_OK) == False:
+        print "\nCannot find %s or it is not readable. Stop" % (filename)
+        sys.exit(1)
+        
+    infocmd = "%s -v quiet -select_streams v:0 -show_entries stream=width,height,bit_rate -of default=nw=1:nk=1 %s" % (ffprobe, filename)
+    result = getCommandOutput(infocmd, verbose)
+    H = int(result[1])
+    W = int(result[0])
+    R = int(result[2])
+    if infomode:
+        print "Height: %d, Width: %d, bitrate: %d" % (H,W,R)
+        sys.exit(0)
+
+    if options.bitrate:
+        a = re.match(r'^[0-9]+[kKmM]$', bitrate)
+        b = re.match(r'^[0-9]+$',bitrate)
+        c = re.match(r'^[0-9]{1,2}%$',bitrate)
+        
+        if (not a) and (not b) and (not c):
+            print "Bitrate must be in the form of integer (e.g. '123456') or integer followed by unit of measure for kibibytes or megabytes (e.g. '1000k', '1M') or a percentage (e.g. '50%'). Stop"
+            sys.exit(1)
+
+    if options.scale:
+        a = re.match(r'^[0-9]+%$', scale)
+        b = re.match(r'^[01](\.[0-9])?$', scale)
+    
+        if (not a) and (not b):
+            print "Scale must be of the form <integer-number>%, or a <floating-number> between 0 and 1. Stop."
+            sys.exit(1)
+
+
+    if options.bitrate:
+        if re.match(r'^([0-9]+)%$', bitrate):
+            percent = bitrate
+            percent = float(percent.rstrip('%'))
+            percent /= 100
+            realbitrate = int(R*percent)
+        else:
+            a = re.match(r'^([0-9]+)[kK]$', bitrate)
+            b = re.match(r'^([0-9]+)[mM]$', bitrate)
+            c = re.match(r'^([0-9]+)$', bitrate)
+            if a:
+                realbitrate = int(a.group(1)) * 1024
+            if b:
+                realbitrate = int(b.group(1)) * 1048576
+            if c:
+                realbitrate = int(c.group(1))
+
+    if options.scale:
+        a = re.match(r'^([0-9]+)%$', scale)
+        if a:
+            realscale = float(int(a.group(1))/100)
+        else:
+            realscale = float(scale)
+
+        if realscale > 1:
+            print "Warning: specified scale factor >1 (or >100%). Resetting to 100%."
+            realscale = 1
+
+        if realscale == 0:
+            print "Warning: specified scale factor equal to 0. Resetting to 100%."
+            realscale = 1
+
+        H = H * realscale
+        W = W * realscale
+
+    if realbitrate > R:
+        print "Specified up-sampling (bitrate is greater than the original one). Stop."
+        sys.exit(1)
+
+    if realbitrate == 0:
+        print "Specified zero bitrate or not specified at all. Resetting it to the original value %d." % (R)
+        realbitrate = R
+        
+    ra = ''
+    if removeaudio:
+        ra ='-an'
+
+    outfile = "%s-converted.mp4" % (filename)
+    if os.path.exists(outfile) == True:
+        if overwrite:
+            os.unlink(outfile)
+        else:
+            print "Output file %s already exists. Please use --overwrite to overwrite it. Stop." % (outfile)
+            sys.exit(1)
+            
+    rb = ''
+    if options.bitrate:
+        rb = "-b:v %d" % (realbitrate)
+
+    rs = ''
+    if options.scale:
+        rs = "scale=%d:%d" % (W, H)
+    ffmpegcmd = "%s %s -i %s -vf %s -c:v libx264 %s  %s-converted.mp4 >/dev/null 2>&1" % (ffmpeg, ra, filename, rs, rb, filename)
+                          
+    millisb = int(round(time.time() * 1000))
+    res = getCommandOutput( ffmpegcmd, verbose )
+    millisa = int(round(time.time() * 1000))
+    size = os.stat(filename).st_size
+    print "Finished conversion. Output file is %s" % (outfile)
+    print "Conversion time millis: %d, %.2f bytes/s" % ( (millisa-millisb), (1000*size)/(millisa-millisb))
