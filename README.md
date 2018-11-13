@@ -59,12 +59,14 @@ Height: 360, Width: 640, bitrate: 2091966
 As can be seen, also bitrate has been reduced to 1/5 automatically by `ffmpeg`.
 ### Reduce quality
 ```
-$ video-convert --bitrate 256k ~/Desktop/video.mp4 -o ~/Desktop/video-lowquality.mp4
-Finished conversion. Output file is /Users/dorigo_a/Desktop/video-rescaled.mp4
-Conversion time millis: 142696, 4683001.00 bytes/s
+$ video-convert -b 256k ~/Desktop/video.mp4 -o ~/Desktop/video-resampled.mp4
+Finished conversion. Output file is /Users/dorigo_a/Desktop/video-resampled.mp4
+Conversion time millis: 212526, 3144300.00 bytes/s
+Alvises-MBP:videoconvert dorigo_a$ video-convert -i ~/Desktop/video-resampled.mp4   
+Height: 720, Width: 1280, bitrate: 257388
 ```
-In this example bitrate is reduced from 11621115 bytes/s (11.08 MBytes/s) to 262144 bytes/s (256 kBytes/s).
+In this example bitrate is reduced from 11621115 bytes/s (11.08 MBytes/s) to 257388 bytes/s (~256 kBytes/s).
 
 Bitrate cannot be increased above the original value (that one printed using `--info` option).
 
-Of course in this case quality reduction without a rescaling leads to a more grany movie.
+Of course in this case quality reduction without a rescaling leads to a more grany movie with a lot of compression artifacts.
