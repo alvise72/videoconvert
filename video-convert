@@ -179,9 +179,7 @@ if __name__ == "__main__":
     if options.outfile:
         outfile = options.outfile
     if os.path.exists(outfile) == True:
-        if overwrite:
-            os.unlink(outfile)
-        else:
+        if overwrite == False:
             print "Output file %s already exists. Please use --overwrite to overwrite it. Stop." % (outfile)
             sys.exit(1)
             
@@ -192,7 +190,12 @@ if __name__ == "__main__":
     rs = ''
     if options.scale:
         rs = "-vf scale=%d:%d" % (W, H)
-    ffmpegcmd = "%s %s -i %s %s -c:v libx264 %s %s >/dev/null 2>&1" % (ffmpeg, ra, filename, rs, rb, outfile)
+
+    overwrite = ''
+    if options.overwrite:
+        overwrite = '-y'
+        
+    ffmpegcmd = "%s %s %s -i %s %s -c:v libx264 %s %s >/dev/null 2>&1" % (ffmpeg, ra, overwrite, filename, rs, rb, outfile)
                           
     millisb = int(round(time.time() * 1000))
     res = getCommandOutput( ffmpegcmd, verbose )
