@@ -50,8 +50,12 @@ $ video-convert --scale 50% ~/Desktop/video.mp4 --output-file ~/Desktop/video-re
 Finished conversion. Output file is /Users/dorigo_a/Desktop/video-rescaled.mp4
 Conversion time millis: 149419, 4472293.00 bytes/s
 ```
-Previous conversion reduced height and width by 50%, which means that the total resolution (total number of pixels) has been reduced to 1/4. Bitrate is automatically reduced by `ffmpeg`.
-
+This conversion reduced height and width by 50%, which means that the total resolution (total number of pixels) has been reduced to 1/4. Bitrate is automatically reduced by `ffmpeg`:
+```
+$ video-convert -i ~/Desktop/video-rescaled.mp4   
+Height: 360, Width: 640, bitrate: 2091966
+```
+As can be seen, also bitrate has been reduced to 1/5 automatically by `ffmpeg`.
 ### Reduce quality
 ```
 $ video-convert --bitrate 256k ~/Desktop/video.mp4 -o ~/Desktop/video-lowquality.mp4
