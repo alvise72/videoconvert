@@ -101,13 +101,19 @@ if __name__ == "__main__":
         print "\nCannot find %s or it is not readable. Stop" % (filename)
         sys.exit(1)
         
-    infocmd = "%s -v quiet -select_streams v:0 -show_entries stream=width,height,bit_rate -of default=nw=1:nk=1 %s" % (ffprobe, filename)
+    #infocmd = "%s -v quiet -select_streams v:0 -show_entries stream=width,height,bit_rate -of default=nw=1:nk=1 %s" % (ffprobe, filename)
+    infocmd = "%s -v quiet -select_streams v:0 -show_entries stream=width,height,bit_rate,codec_name,r_frame_rate -show_entries format=size -of default=nw=1:nk=1 %s" % (ffprobe, filename)
     result = getCommandOutput(infocmd, verbose)
-    H = int(result[1])
-    W = int(result[0])
-    R = int(result[2])
+    C = str(result[0])
+    H = int(result[2])
+    W = int(result[1])
+    FR= str(result[3])
+    R = int(result[4])
+    S = int(result[5])
+    a,b = FR.split('/')
+    fr = int(a)/int(b)
     if infomode:
-        print "Height: %d, Width: %d, bitrate: %d" % (H,W,R)
+        print "Height: %d, Width: %d, bitrate: %d, codec: %s, size: %d bytes, framerate: %d fps" % (H,W,R,C,S,fr)
         sys.exit(0)
 
     if options.bitrate:
