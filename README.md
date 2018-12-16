@@ -38,6 +38,7 @@ Options:
                         Alternative path of ffprobe binary
   -o OUTFILE, --output-file=OUTFILE
                         Alternative path for output file
+  -T, --T2              Use Apple's T2 encoder chip instead of software h264
 ```
 ## Typical jobs
 ### Just get video information
