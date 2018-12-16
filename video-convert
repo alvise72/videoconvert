@@ -70,6 +70,13 @@ if __name__ == "__main__":
                       type='string',
                       dest='outfile',
                       help='Alternative path for output file')
+    parser.add_option('-T',
+                      '--T2',
+                      action="store_true",
+                      dest='applet2',
+                      default=False,
+                      help='Use Apple\'s T2 encoder chip instead of software h264')
+
     (options, args) = parser.parse_args()
     if len(args) == 0:
         print "Must specify mandatory argument <filename>. Stop!\n"
@@ -201,7 +208,11 @@ if __name__ == "__main__":
     if options.overwrite:
         overwrite = '-y'
         
-    ffmpegcmd = "%s %s %s -i %s %s -c:v libx264 %s %s >/dev/null 2>&1" % (ffmpeg, ra, overwrite, filename, rs, rb, outfile)
+    encoder = "-c:v libx264"
+    if options.applet2:
+        encoder = "-c:v hevc_videotoolbox -vtag hvc1"
+        
+    ffmpegcmd = "%s %s %s -i %s %s %s %s %s >/dev/null 2>&1" % (ffmpeg, ra, overwrite, filename, rs, encoder, rb, outfile)
                           
     millisb = int(round(time.time() * 1000))
     res = getCommandOutput( ffmpegcmd, verbose )
