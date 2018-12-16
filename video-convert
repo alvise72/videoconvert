@@ -221,7 +221,7 @@ if __name__ == "__main__":
     if options.applet2:
         encoder = "-c:v hevc_videotoolbox -vtag hvc1"
       
-    if option.h265:
+    if options.h265:
         encoder = "-c:v libx265"
     
     ffmpegcmd = "%s %s %s -i %s %s %s %s %s >/dev/null 2>&1" % (ffmpeg, ra, overwrite, filename, rs, encoder, rb, outfile)
