@@ -82,12 +82,6 @@ if __name__ == "__main__":
                       dest='h265',
                       default=False,
                       help='Use h265 encoder instead of h264')
-
-    parser.add_option('-r',
-                      '--fps',
-                      dest='fps',
-                      help='Set the desired frame rate')
-    
     (options, args) = parser.parse_args()
     if len(args) == 0:
         print "Must specify mandatory argument <filename>. Stop!\n"
@@ -120,8 +114,11 @@ if __name__ == "__main__":
         sys.exit(1)
         
     #infocmd = "%s -v quiet -select_streams v:0 -show_entries stream=width,height,bit_rate -of default=nw=1:nk=1 %s" % (ffprobe, filename)
-    infocmd = "%s -v quiet -select_streams v:0 -show_entries stream=width,height,bit_rate,codec_name,r_frame_rate -show_entries format=size -of default=nw=1:nk=1 %s" % (ffprobe, filename)
+    infocmd = "%s -v quiet -select_streams v:0 -show_entries stream=width,height,bit_rate,codec_name,r_frame_rate -show_entries format=size -of default=nw=1:nk=1 \"%s\"" % (ffprobe, filename)
     result = getCommandOutput(infocmd, verbose)
+    if len(result) == 0:
+      print "No video Info. Stop."
+      sys.exit(0)
     C = str(result[0])
     H = int(result[2])
     W = int(result[1])
@@ -229,12 +226,8 @@ if __name__ == "__main__":
       
     if options.h265:
         encoder = "-c:v libx265"
-
-    fps=''
-    if options.fps:
-        fps = " -r %d" % (int(options.fps)) 
-        
-    ffmpegcmd = "%s %s %s %s -i %s %s %s %s %s >/dev/null 2>&1" % (ffmpeg, ra, overwrite, fps, filename, rs, encoder, rb, outfile)
+    
+    ffmpegcmd = "%s %s %s -i %s %s %s %s %s >/dev/null 2>&1" % (ffmpeg, ra, overwrite, filename, rs, encoder, rb, outfile)
                           
     millisb = int(round(time.time() * 1000))
     res = getCommandOutput( ffmpegcmd, verbose )
